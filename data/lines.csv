@@ -1,0 +1,8 @@
+line_id,line_name,network,color
+RED,Red Line,metro,red
+GREEN,Green Line,metro,green
+GOLD,Gold Line,metro,gold
+PINK,Pink Line,tram,pink
+ORANGE,Orange Line,tram,orange
+TURQUOISE,Turquoise Line,tram,turquoise
+TRANSFER,Metro-Tram Transfer,transfer,none

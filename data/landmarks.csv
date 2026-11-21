@@ -1,0 +1,48 @@
+landmark_id,name,aliases,category,parent_id
+MALL01,Mall of Qatar,MOQ; Mall of Qatar Doha,mall,
+MALL02,Villaggio Mall,Villagio; Villaggio,mall,
+MALL03,Al Mirqab Mall,Mirqab Mall; Al Mirqab,mall,
+MALL04,Msheireb Galleria,Galleria; Msheireb Mall,mall,
+MALL05,Place Vendome,Vendome; Place Vendome Mall,mall,
+MALL06,Lagoona Mall,Lagoona; Lagoona Doha,mall,
+MALL07,Hyatt Plaza,Hyatt Plaza Mall,mall,
+MALL08,Doha Festival City,DFC; Festival City,mall,
+MALL09,Doha Mall,Doha Mall Doha,mall,
+MALL10,Tawar Mall,Tawar,mall,
+MALL11,Asmakh Mall,Asmakh,mall,
+MALL12,The Gate Mall,Gate Mall,mall,
+MALL13,The Mall,The Mall Doha,mall,
+MALL14,Ezdan Mall Wakra,Ezdan Mall; Ezdan Wakra,mall,
+MALL15,City Center,CC,mall,
+UNI01,University of Doha for Science and Technology,UDST; Doha University of Technology,university,
+UNI02,Lusail University,LU,university,
+UNI03,Georgetown University in Qatar,Georgetown; GU-Q; GUQ,university,
+UNI04,Northwestern University in Qatar,Northwestern; NU-Q; NUQ,university,
+UNI05,Carnegie Mellon University in Qatar,Carnegie Mellon; CMU; CMU-Q; CMUQ,university,
+UNI06,Doha Institute for Graduate Studies,DI; Doha Institute; DIGS,university,
+UNI07,Community College of Qatar,CCQ,university,
+UNI08,Hamad Bin Khalifa University,HBKU,university,
+UNI09,Virginia Commonwealth University in Qatar,VCU; VCUarts Qatar; VCU Qatar,university,
+UNI10,Weill Cornell Medicine-Qatar,Weill Cornell; WCM-Q; WCMQ,university,
+UNI11,Al Rayyan University,Rayyan University,university,
+UNI12,University of Aberdeen,Aberdeen; Aberdeen Doha,university,
+UNI13,University of Ulster,Ulster; Ulster Doha,university,
+UNI14,Liverpool John Moores University | Oryx University,Oryx; Liverpool; LJMU; ,university,
+UNI15,National University of Malaysia (UKM),UKM; Universiti Kebangsaan Malaysia,university,
+UNI16,Barzan University,Barzan,university,
+UNI17,Qatar University,QU; Qatar Uni; QU campus,university,
+QU_H15,College of Medicine and Health Sciences,QU Medicine; CMHS; H15,university_building,UNI17
+QU_H07,College of Engineering,QU Engineering; CENG; H07,university_building,UNI17
+QU_H08,College of Business and Economics,QU Business; CBE; H08,university_building,UNI17
+QU_I03,College of Nursing,QU Nursing; I03,university_building,UNI17
+QU_I10,College of Education,QU Education; I10,university_building,UNI17
+QU_I09,College of Law,QU Law; I09,university_building,UNI17
+QU_C11,College of Sharia and Islamic Studies (Building A),QU Sharia A; Sharia College A; C11,university_building,UNI17
+QU_C07,College of Sharia and Islamic Studies (Building B),QU Sharia B; Sharia College B; C07,university_building,UNI17
+QU_C01,College of Arts and Science,QU Arts and Science; CAS; C01,university_building,UNI17
+QU_I11,Student Affairs,QU Student Affairs; I11,university_building,UNI17
+QU_H10,Research Complex,QU Research Complex; H10,university_building,UNI17
+QU_B13,Qatar University Library,QU Library; B13,university_building,UNI17
+QU_F05,Male Housing,QU Male Dorm; Qatar University Male Dorm; F05,university_building,UNI17
+QU_F16,Female Housing,QU Female Dorm; Qatar University Female Dorm; F16,university_building,UNI17
+QU_A07,Sports & Events Complex,QU Sports Complex; QU Events Complex; A07,university_building,UNI17
