@@ -23,6 +23,7 @@ from landmarks import (
     STATIONS, LANDMARKS, LANDMARK_STATIONS, GRAPH, LINE_NAMES, PARK_AND_RIDE,
     WALK_LIMIT_M, MAX_OPTIONS,
     plan_trip_to_landmark, tram_notice, route_uses_tram, tram_transfer_station, normalise,
+    find_landmark, get_landmark_info,
 )
 
 # ----- SETTINGS -----------------------------------------------------------
@@ -32,6 +33,7 @@ QU_SHUTTLE_URL = "https://www.qu.edu.qa/sites/default/files/2026-11/Bus%20Schedu
 
 QU_CAMPUS_ID = "UNI17"      # the landmark_id of the Qatar University campus row
 MAX_NEAR = 8                # how many places places_near_station lists at most
+WALK_MENTION_LIMIT_M = 1500  # a walk longer than this is left out of the first reply (get_walk_distance has it)
 # --------------------------------------------------------------------------
 
 
@@ -75,10 +77,11 @@ def last_stretch(info):
     stretch = {
         "from_station": info["station_name"],
         "station_type": "tram" if info["station_id"].startswith("T_") else "metro",
-        "walk_m": info["walk_dist"],
         "walkable": walkable,
         "advice": "walk" if walkable else "taxi",
     }
+    if info["walk_dist"] <= WALK_MENTION_LIMIT_M:   # a very long walk is not worth mentioning
+        stretch["walk_m"] = info["walk_dist"]
     if walkable:
         stretch["walk_min"] = info["walk_minutes"]
     if info["road_dist"]:           # blank for very short walks, so no taxi line for those
@@ -197,9 +200,7 @@ def plan_trip(start, place):
     out["last_stretch"] = last_stretch(info)
     if result["tram_notice"]:
         out["tram_notice"] = result["tram_notice"]
-    offer = choose_offer(info)
-    if offer:
-        out["offer"] = offer
+    out["offer"] = choose_offer(info)       # None means: make no offer at all
     return out
 
 
@@ -223,7 +224,7 @@ def get_bus_details(start, place):
             "route_checked": bus["date_checked"],
         }
         if bus["stop_to_landmark_m"]:
-            details["stop_to_place_m"] = bus["stop_to_landmark_m"]
+            details["walk_to_place_after_getting_off_m"] = bus["stop_to_landmark_m"]
         if not bus["same_station"]:     # a different boarding station needs its own route
             details["route_to_boarding_station"] = compact_route(bus["route"])
         if bus["tram_notice"]:
@@ -257,6 +258,26 @@ def get_metro_taxi_option(start, place):
         "road_m": fallback["road_dist"],
         "advice": fallback["suggestion"],
     }
+
+
+def get_walk_distance(place):
+    """The walking and road distance from a place's closest station. plan_trip leaves a long
+    walk out of its first reply, so this is how the AI answers "how far is it on foot?"."""
+    status, ids = find_landmark(place, LANDMARKS)
+    if status == "not_found":
+        return {"error": "place_not_found",
+                "hint": "I only cover malls and universities. Ask the user which place they mean."}
+    if status == "ambiguous":
+        return {"error": "ambiguous_place",
+                "options": [LANDMARKS[i]["name"] for i in ids][:MAX_OPTIONS]}
+    info = get_landmark_info(ids[0])
+    if info["status"] == "needs_detail":
+        return {"error": "needs_building", "buildings": info["options"],
+                "hint": "Ask which building they mean."}
+    out = {"place": info["name"], "from_station": info["station_name"], "walk_m": info["walk_dist"]}
+    if info["road_dist"]:
+        out["road_m"] = info["road_dist"]
+    return out
 
 
 def places_near_station(station):
@@ -356,6 +377,10 @@ TOOLS = [
           "Nearest metro station, route and taxi distance for a tram place. Call ONLY after "
           "the user accepts that offer.",
           {"start": START, "place": PLACE}),
+    _tool("get_walk_distance",
+          "Walking and road distance from a place's closest station. Use when the user asks how "
+          "far it is on foot or by road.",
+          {"place": PLACE}),
     _tool("places_near_station",
           "Places whose closest station is the given station.",
           {"station": "Station name"}),
@@ -371,6 +396,7 @@ TOOL_FUNCTIONS = {
     "plan_trip": plan_trip,
     "get_bus_details": get_bus_details,
     "get_metro_taxi_option": get_metro_taxi_option,
+    "get_walk_distance": get_walk_distance,
     "places_near_station": places_near_station,
     "park_and_ride": park_and_ride,
     "plan_route": plan_route,

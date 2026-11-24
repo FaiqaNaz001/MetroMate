@@ -181,6 +181,68 @@ def test_rate_limit_message_and_header_parsing():
     assert parse_retry_after("soon") is None
 
 
+# ---------- not repeating a route the visitor just saw ----------
+
+def tool_result(llm, call_number):
+    """The tool message the model was given in its call number `call_number` (0 = first)."""
+    return json.loads(llm.calls[call_number]["messages"][-1]["content"])
+
+
+def test_a_route_is_not_repeated_for_the_same_start_and_station():
+    llm = FakeLLM([reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU"})]), reply("Which building?"),
+                   reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "College of Engineering"})]), reply("A taxi.")])
+    bot = MetroMate(llm=llm)
+    bot.ask("Katara to QU")
+    bot.ask("engineering")
+    first, second = tool_result(llm, 1), tool_result(llm, 3)
+    assert first["route"]["steps"] and "route_already_given" not in first
+    assert second["route"] == {"already_given": True} and second["route_already_given"] is True
+    assert second["last_stretch"]["advice"] == "taxi"          # everything else is still there
+
+
+def test_a_different_start_or_station_gets_its_route():
+    llm = FakeLLM([reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU"})]), reply("ok"),
+                   reply(tool_calls=[tool_call("plan_trip", {"start": "Al Sadd", "place": "QU Engineering"})]), reply("ok"),
+                   reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "Mall of Qatar"})]), reply("ok")])
+    bot = MetroMate(llm=llm)
+    for question in ("a", "b", "c"):
+        bot.ask(question)
+    assert "route_already_given" not in tool_result(llm, 3)    # another start station
+    assert "route_already_given" not in tool_result(llm, 5)    # another closest station
+
+
+def test_a_route_that_was_never_delivered_is_not_marked_as_shown():
+    llm = FakeLLM([reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU"})]), RateLimited(None),
+                   reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU"})]), reply("ok")])
+    bot = MetroMate(llm=llm)
+    assert "usage limit" in bot.ask("first try fails")
+    bot.ask("second try")
+    assert "route_already_given" not in tool_result(llm, 3)    # the visitor never saw the first route
+
+
+def test_a_route_is_shown_again_once_it_has_scrolled_out_of_memory():
+    script = [reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU"})]), reply("ok")]
+    for _ in range(KEEP_TURNS):
+        script.append(reply("filler"))
+    script += [reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "QU Engineering"})]), reply("ok")]
+    llm = FakeLLM(script)
+    bot = MetroMate(llm=llm)
+    bot.ask("first")
+    for i in range(KEEP_TURNS):
+        bot.ask(f"filler {i}")
+    bot.ask("again")
+    assert "route_already_given" not in tool_result(llm, len(llm.calls) - 1)
+
+
+def test_other_tools_are_never_changed():
+    llm = FakeLLM([reply(tool_calls=[tool_call("plan_trip", {"start": "Katara", "place": "Aberdeen"})]), reply("ok"),
+                   reply(tool_calls=[tool_call("get_bus_details", {"start": "Katara", "place": "Aberdeen"})]), reply("ok")])
+    bot = MetroMate(llm=llm)
+    bot.ask("a")
+    bot.ask("yes")
+    assert tool_result(llm, 3)["buses"][0]["route_to_boarding_station"]["steps"]
+
+
 # ---------- call_llm: fallback model, dropped settings, retries ----------
 
 class FakeSend:
@@ -411,7 +473,9 @@ def test_the_instructions_have_the_key_rules_and_stay_short():
     for phrase in ["MetroMate", "offer.question", "needs_building", "tram_notice", "tram_time_unknown",
                    "get_bus_details", "get_metro_taxi_option", "park_and_ride", "qu_shuttle",
                    "Qatar Rail", "Karwa", "never guess distances", "unofficial",
-                   "requested_building_not_listed", "ALL the names", "own knowledge"]:
+                   "requested_building_not_listed", "ALL the names", "own knowledge",
+                   "route_already_given", "get_walk_distance", "bulleted list",
+                   "walk_to_place_after_getting_off_m", "offer is null"]:
         assert phrase in SYSTEM_PROMPT, f"instructions are missing: {phrase}"
     assert len(SYSTEM_PROMPT) < 3200                            # about 800 tokens at most
 
@@ -431,4 +495,7 @@ if __name__ == "__main__":
         except AssertionError as error:
             failed += 1
             print(f"FAIL  {name}  {error}")
+        except Exception as error:                         # a crash inside the code being tested
+            failed += 1
+            print(f"ERROR {name}  {type(error).__name__}: {error}")
     print(f"\n{len(tests) - failed} of {len(tests)} tests passed.")

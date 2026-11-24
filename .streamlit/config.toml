@@ -1,0 +1,13 @@
+# Streamlit settings for MetroMate. Keep this file in a folder called .streamlit
+# in the project root (next to app.py).
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#E0A47A"
+backgroundColor = "#2D0606"
+secondaryBackgroundColor = "#282828"
+textColor = "#F0D7C0"
+font = "sans serif"

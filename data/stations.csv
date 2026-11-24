@@ -1,60 +1,60 @@
-station_id,name_en,network,park_and_ride
-M_LUSAIL_QNB,Lusail QNB,metro,TRUE
-M_QATAR_UNIVERSITY,Qatar University,metro,TRUE
-M_LEGTAIFIYA,Legtaifiya,metro,TRUE
-M_KATARA,Katara,metro,FALSE
-M_AL_QASSAR,Al Qassar,metro,TRUE
-M_DECC,DECC,metro,FALSE
-M_WEST_BAY,West Bay,metro,FALSE
-M_CORNICHE,Corniche,metro,FALSE
-M_AL_BIDDA,Al Bidda,metro,FALSE
-M_MSHEIREB,Msheireb,metro,FALSE
-M_AL_DOHA_AL_JADEDA,Al Doha Al Jadeda,metro,FALSE
-M_UMM_GHUWAILINA,Umm Ghuwailina,metro,TRUE
-M_AL_MATAR_AL_QADEEM,Al Matar Al Qadeem,metro,FALSE
-M_OQBA_IBN_NAFIE,Oqba Ibn Nafie,metro,TRUE
-M_FREE_ZONE,Free Zone,metro,TRUE
-M_RAS_BU_FONTAS,Ras Bu Fontas,metro,TRUE
-M_AL_WAKRA,Al Wakra,metro,TRUE
-M_HAMAD_INTERNATIONAL_AIRPORT,Hamad International Airport,metro, FALSE
-M_AL_RIFFA,Al Riffa,metro, FALSE
-M_EDUCATION_CITY,Education City,metro,TRUE
-M_QATAR_NATIONAL_LIBRARY,Qatar National Library,metro, FALSE
-M_AL_SHAQAB,Al Shaqab,metro, FALSE
-M_AL_RAYYAN_AL_QADEEM,Al Rayyan Al Qadeem,metro,TRUE
-M_AL_MESSILA,Al Messila,metro,TRUE
-M_HAMAD_HOSPITAL,Hamad Hospital,metro, FALSE
-M_THE_WHITE_PALACE,The White Palace,metro, FALSE
-M_AL_MANSOURA,Al Mansoura,metro, FALSE
-M_AL_AZIZIYAH,Al Aziziyah,metro, FALSE
-M_SPORT_CITY,Sport City,metro, FALSE
-M_AL_WAAB,Al Waab,metro,TRUE
-M_AL_SUDAN,Al Sudan,metro,TRUE
-M_JOAAN,Joaan,metro, FALSE
-M_AL_SADD,Al Sadd,metro, FALSE
-M_BIN_MAHMOUD,Bin Mahmoud,metro, FALSE
-M_SOUQ_WAQIF,Souq Waqif,metro, FALSE
-M_NATIONAL_MUSEUM,National Museum,metro, FALSE
-M_RAS_BU_ABBOUD,Ras Bu Abboud,metro,TRUE
-T_LEGTAIFIYA,Legtaifiya,tram,
-T_MARINA_SOUTH,Marina South,tram,
-T_MARINA_CENTRAL,Marina Central,tram,
-T_YACHT_CLUB,Yacht Club,tram,
-T_MARINA_NORTH,Marina North,tram,
-T_TARFAT_SOUTH,Tarfat South,tram,
-T_TARFAT_NORTH,Tarfat North,tram,
-T_WADI,Wadi,tram,
-T_SEEF_LUSAIL_SOUTH,Seef Lusail South,tram,
-T_SEEF_LUSAIL_NORTH,Seef Lusail North,tram,
-T_AL_WESSIL,Al Wessil,tram,
-T_NAIFA,Naifa,tram,
-T_FOX_HILLS_SOUTH,Fox Hills South,tram,
-T_DOWNTOWN_LUSAIL,Downtown Lusail,tram,
-T_AL_KHAYL_STREET,Al Khayl Street,tram,
-T_FOX_HILLS_NORTH,Fox Hills North,tram,
-T_CRESCENT_PARK_NORTH,Crescent Park North,tram,
-T_RAWDAT_LUSAIL,Rawdat Lusail,tram,
-T_ERKIYAH,Erkiyah,tram,
-T_LUSAIL_STADIUM,Lusail Stadium,tram,
-T_AL_YASMEEN,Al Yasmeen,tram,
-T_LUSAIL_QNB,Lusail QNB,tram,
+station_id,name_en,network,park_and_ride,aliases
+M_LUSAIL_QNB,Lusail QNB,metro,TRUE,Lusail; Losail
+M_QATAR_UNIVERSITY,Qatar University,metro,TRUE,QU; Qatar Uni
+M_LEGTAIFIYA,Legtaifiya,metro,TRUE,
+M_KATARA,Katara,metro,FALSE,
+M_AL_QASSAR,Al Qassar,metro,TRUE,Al-Qassar; Qassar
+M_DECC,DECC,metro,FALSE,
+M_WEST_BAY,West Bay,metro,FALSE,WestBay; QatarEnergy; Qatar Energy
+M_CORNICHE,Corniche,metro,FALSE,
+M_AL_BIDDA,Al Bidda,metro,FALSE,Al-Bidda
+M_MSHEIREB,Msheireb,metro,FALSE,Musherib; Msherib; Msheireb; Musheireb
+M_AL_DOHA_AL_JADEDA,Al Doha Al Jadeda,metro,FALSE,New Doha; Doha Jadeeda
+M_UMM_GHUWAILINA,Umm Ghuwailina,metro,TRUE,Mughlina
+M_AL_MATAR_AL_QADEEM,Al Matar Al Qadeem,metro,FALSE,Matar Qadeem; Old Airport
+M_OQBA_IBN_NAFIE,Oqba Ibn Nafie,metro,TRUE,
+M_FREE_ZONE,Free Zone,metro,TRUE,
+M_RAS_BU_FONTAS,Ras Bu Fontas,metro,TRUE,
+M_AL_WAKRA,Al Wakra,metro,TRUE,Al Wakrah; Wakra; Wakrah
+M_HAMAD_INTERNATIONAL_AIRPORT,Hamad International Airport,metro, FALSE,HIA; Hamad Airport; Airport
+M_AL_RIFFA,Al Riffa,metro, FALSE,Riffa; MOQ; Mall of Qatar; Al-Riffa
+M_EDUCATION_CITY,Education City,metro,TRUE,
+M_QATAR_NATIONAL_LIBRARY,Qatar National Library,metro, FALSE,QNL; Library; Qatar Library
+M_AL_SHAQAB,Al Shaqab,metro, FALSE,Al-Shaqab
+M_AL_RAYYAN_AL_QADEEM,Al Rayyan Al Qadeem,metro,TRUE,Rayyan Qadeem
+M_AL_MESSILA,Al Messila,metro,TRUE,"Al-Messila, Messila"
+M_HAMAD_HOSPITAL,Hamad Hospital,metro, FALSE,Hospital
+M_THE_WHITE_PALACE,The White Palace,metro, FALSE,
+M_AL_MANSOURA,Al Mansoura,metro, FALSE,Al-Mansoura
+M_AL_AZIZIYAH,Al Aziziyah,metro, FALSE,"Aziziyah, Aziziya, Al Aziziya; Al-Aziziyah; Al-Aziziya"
+M_SPORT_CITY,Sport City,metro, FALSE,
+M_AL_WAAB,Al Waab,metro,TRUE,Waab; Al-Waab
+M_AL_SUDAN,Al Sudan,metro,TRUE,Al-Sudan; Sudan
+M_JOAAN,Joaan,metro, FALSE,
+M_AL_SADD,Al Sadd,metro, FALSE,Al-Sadd
+M_BIN_MAHMOUD,Bin Mahmoud,metro, FALSE,
+M_SOUQ_WAQIF,Souq Waqif,metro, FALSE,
+M_NATIONAL_MUSEUM,National Museum,metro, FALSE,Museum; Qatar Museum
+M_RAS_BU_ABBOUD,Ras Bu Abboud,metro,TRUE,Stadium 974; 974
+T_LEGTAIFIYA,Legtaifiya,tram,,
+T_MARINA_SOUTH,Marina South,tram,,
+T_MARINA_CENTRAL,Marina Central,tram,,
+T_YACHT_CLUB,Yacht Club,tram,,
+T_MARINA_NORTH,Marina North,tram,,
+T_TARFAT_SOUTH,Tarfat South,tram,,
+T_TARFAT_NORTH,Tarfat North,tram,,
+T_WADI,Wadi,tram,,
+T_SEEF_LUSAIL_SOUTH,Seef Lusail South,tram,,
+T_SEEF_LUSAIL_NORTH,Seef Lusail North,tram,,
+T_AL_WESSIL,Al Wessil,tram,,
+T_NAIFA,Naifa,tram,,
+T_FOX_HILLS_SOUTH,Fox Hills South,tram,,
+T_DOWNTOWN_LUSAIL,Downtown Lusail,tram,,
+T_AL_KHAYL_STREET,Al Khayl Street,tram,,
+T_FOX_HILLS_NORTH,Fox Hills North,tram,,
+T_CRESCENT_PARK_NORTH,Crescent Park North,tram,,
+T_RAWDAT_LUSAIL,Rawdat Lusail,tram,,
+T_ERKIYAH,Erkiyah,tram,,
+T_LUSAIL_STADIUM,Lusail Stadium,tram,,
+T_AL_YASMEEN,Al Yasmeen,tram,,
+T_LUSAIL_QNB,Lusail QNB,tram,,

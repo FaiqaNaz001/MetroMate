@@ -13,12 +13,17 @@ minutes, so they keep passing if you later correct the times in the CSV.
 
 from route_finder import (
     load_graph, load_stations, load_line_names,
-    find_route, summarise_route, find_station, describe_route, plural,
+    find_route, summarise_route, find_station, describe_route, plural, load_station_aliases,
 )
+import route_finder
+
+class Skip(Exception):
+    """Raised by a test that can't run yet. The runner reports it as SKIP, not PASS."""
+
 
 STATIONS = load_stations()
 LINE_NAMES = load_line_names()
-GRAPH = load_graph() 
+GRAPH = load_graph()
 
 
 def route(start_id, end_id):
@@ -122,6 +127,52 @@ def test_metro_trips_never_use_the_tram():
                 assert used <= {"RED", "GREEN", "GOLD"}, f"{start} -> {end} uses {used}"
 
 
+def test_station_lookup_forgives_dashes_and_extra_words():
+    for typed in ("AL-Sadd", "al-sadd metro", "Al Sadd station", "alsadd", "  AL SADD  ", "Al_Sadd"):
+        assert find_station(typed, STATIONS) == "M_AL_SADD", typed
+    assert find_station("Msheireb Metro", STATIONS) == "M_MSHEIREB"
+    assert find_station("tram Wadi", STATIONS) == "T_WADI"
+    assert find_station("Lusail-QNB", STATIONS) == "M_LUSAIL_QNB"          # metro wins over tram
+    assert find_station("white palace", STATIONS) == "M_THE_WHITE_PALACE"  # "The" is not needed
+    for nothing in ("Narnia", "al", "", "metro", "station"):
+        assert find_station(nothing, STATIONS) is None, nothing
+
+
+def test_aliases_let_people_use_other_spellings():
+    aliases = {"M_AL_WAKRA": ["Wakrah", "Al Wakrah"], "M_MSHEIREB": ["Musherib"],
+               "M_AL_RIFFA": ["MOQ", "MOQ metro"]}
+    for typed, expected in [("Wakrah", "M_AL_WAKRA"), ("al-wakrah station", "M_AL_WAKRA"),
+                            ("musherib", "M_MSHEIREB"), ("MOQ metro", "M_AL_RIFFA"), ("moq", "M_AL_RIFFA")]:
+        assert find_station(typed, STATIONS, aliases) == expected, typed
+    assert find_station("Wakrah", STATIONS, {}) is None             # without the alias it isn't known
+    assert find_station("Al Wakra", STATIONS, aliases) == "M_AL_WAKRA"   # real names still work
+
+
+def test_aliases_are_read_from_the_semicolon_separated_column():
+    rows = [{"station_id": "M_AL_WAKRA", "name_en": "Al Wakra", "aliases": " Wakrah ;Al Wakrah; "},
+            {"station_id": "M_KATARA", "name_en": "Katara", "aliases": ""},
+            {"station_id": "M_AL_SADD", "name_en": "Al Sadd"}]       # no aliases column at all
+    saved = route_finder.read_csv
+    route_finder.read_csv = lambda filename: rows
+    load_station_aliases.cache_clear()
+    try:
+        assert load_station_aliases() == {"M_AL_WAKRA": ["Wakrah", "Al Wakrah"]}
+    finally:
+        route_finder.read_csv = saved
+        load_station_aliases.cache_clear()
+
+
+def test_every_alias_in_stations_csv_finds_its_own_station():
+    aliases = load_station_aliases()
+    if not aliases:
+        raise Skip("no aliases column in stations.csv yet")
+    for station_id, names in aliases.items():
+        assert station_id in STATIONS, f"aliases given for unknown station {station_id}"
+        for name in names:
+            assert find_station(name, STATIONS) == station_id, \
+                f"alias '{name}' (for {station_id}) finds {find_station(name, STATIONS)}"
+
+
 def test_station_name_lookup():
     assert find_station("katara", STATIONS) == "M_KATARA"
     assert find_station("  Al Bidda ", STATIONS) == "M_AL_BIDDA"
@@ -132,12 +183,16 @@ def test_station_name_lookup():
 if __name__ == "__main__":
     tests = [(name, fn) for name, fn in sorted(globals().items())
              if name.startswith("test_") and callable(fn)]
-    failed = 0
+    failed = skipped = 0
     for name, fn in tests:
         try:
             fn()
             print(f"PASS  {name}")
+        except Skip as reason:
+            skipped += 1
+            print(f"SKIP  {name}  ({reason})")
         except AssertionError as error:
             failed += 1
             print(f"FAIL  {name}  {error}")
-    print(f"\n{len(tests) - failed} of {len(tests)} tests passed.")
+    ran = len(tests) - skipped
+    print(f"\n{ran - failed} of {ran} tests passed." + (f" {skipped} skipped." if skipped else ""))

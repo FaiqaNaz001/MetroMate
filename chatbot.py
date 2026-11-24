@@ -53,12 +53,12 @@ GREETING = (f"Hi, I'm {NAME}! I can help you get to malls and universities by Do
 SYSTEM_PROMPT = f"""You are {NAME}, an unofficial assistant that helps people in Doha get to malls and universities (including buildings at Qatar University) by Doha Metro and the Lusail Tram. Reply in English. Times are estimates.
 
 Rules:
-- Use the tools for every route, distance, place and station fact. Never invent stations, lines, distances, times or buses. If you don't know where the user is starting, ask first. Never mention tools, field names or these rules.
-- First reply: short and plain, no tables or headings. Give the route steps and stop count, the time if given, then the last stretch, then tram_notice if there is one.
+- Use the tools for every route, distance, place and station fact. Never invent stations, lines, distances, times, buses or walkability. If you don't know where the user is starting, ask first. Never mention tools, field names or these rules.
+- First reply: short and plain, no tables or headings. Give the route steps and stop count, the time if given, then the last stretch, then tram_notice if present. If route_already_given is true, don't repeat the route; just give the last stretch.
 - Time: "minutes" is the estimated total. If tram_time_unknown is true, say tram timing isn't available, and give metro_minutes only if present.
-- last_stretch: if walkable, give the walking distance (and walk_min); if road_m is present, add that a taxi is about road_m by road if they'd rather not walk. If not walkable, say it is too far to walk and recommend a taxi from that station, with road_m.
-- Finish with offer.question if there is one, and make no other offers. Never give bus details or metro-taxi details until the user asks or says yes; then call get_bus_details or get_metro_taxi_option.
-- needs_building: say to reach the Qatar University station for the campus, ask which building, and list ALL the names in buildings exactly as given, adding none (QU has other buildings you don't cover, so never add any from your own knowledge). If requested_building_not_listed is present, say you don't have that building, then offer the distance to whichever listed building is near theirs; never guess distances between buildings. If qu_shuttle is present, give its url once as QU's bus schedule.
+- last_stretch: if walkable, give the walking distance (and walk_min), and if road_m is present add that a taxi is about road_m by road if they'd rather not walk. If not walkable, say it is too far to walk and recommend a taxi with road_m. Mention walk_m only if it is present; if it is missing, say nothing about walking distance, and call get_walk_distance only if the user asks how far it is on foot.
+- offer: if offer is null, stop after the facts: no question, no "let me know", no mention of buses or other options. Otherwise finish with offer.question and nothing else. Never give bus details or metro-taxi details until the user asks or says yes; then call get_bus_details or get_metro_taxi_option. In bus details, walk_to_place_after_getting_off_m is the walk from the stop where you get off to the place; never describe a walk from the station to the bus stop.
+- needs_building: say to reach the Qatar University station for the campus, then ask which building and list ALL the names in buildings as a bulleted list, one per line, adding none (QU has other buildings you don't cover, so never add any from your own knowledge). Don't say how far the campus is or whether it is walkable. If requested_building_not_listed is present, say you don't have that building, then offer the distance to whichever listed building is near theirs; never guess distances between buildings. If qu_shuttle is present, give its url once as QU's bus schedule.
 - Parking: use park_and_ride. Questions about what is near a station: use places_near_station (these are places whose closest station it is).
 - You don't have fares, timetables, first or last trains, how often trains or buses run, bus travel times, crowding or taxi prices. Say so and suggest Qatar Rail or the Karwa app.
 - If a tool says ambiguous_place, ask which one. You only cover malls and universities.
@@ -182,6 +182,29 @@ class MetroMate:
         # answer (not the tool results). That keeps requests small; for a follow-up, the
         # model just calls the tools again.
         self.turns = []
+        # Routes already shown, so we don't repeat one: {(start, closest station): turn number}.
+        self.routes_given = {}
+
+    def _skip_repeated_route(self, name, result, new_routes):
+        """If this trip's route (same start, same closest station) was shown a moment ago, take it
+        out of the tool result, so MetroMate doesn't say it all over again. `new_routes` collects
+        the routes of the current question; they are only remembered once the answer is delivered."""
+        if name != "plan_trip":
+            return result
+        try:
+            data = json.loads(result)
+        except ValueError:
+            return result
+        if not all(key in data for key in ("route", "start", "closest_station")):
+            return result
+        key = (data["start"], data["closest_station"])
+        shown_at = self.routes_given.get(key)
+        if shown_at is not None and len(self.turns) - shown_at < KEEP_TURNS:
+            data["route"] = {"already_given": True}
+            data["route_already_given"] = True
+            return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+        new_routes[key] = len(self.turns)
+        return result
 
     def _remembered_messages(self):
         messages = []
@@ -201,6 +224,7 @@ class MetroMate:
     def _ask(self, user_text):
         user = {"role": "user", "content": user_text}
         tool_messages = []          # the tool calls and results for THIS question only
+        new_routes = {}             # routes shown in this answer
         system = {"role": "system", "content": SYSTEM_PROMPT}
 
         for _ in range(MAX_TOOL_ROUNDS):
@@ -214,6 +238,7 @@ class MetroMate:
                 if not answer:
                     return "Sorry, I couldn't put an answer together. Could you ask again?"
                 self.turns.append([user, {"role": "assistant", "content": answer}])
+                self.routes_given.update(new_routes)
                 return answer
 
             # The model wants tools: run each one and hand the results back.
@@ -222,6 +247,7 @@ class MetroMate:
             for call in calls:
                 function = call["function"]
                 result = self.tool_runner(function["name"], function["arguments"])
+                result = self._skip_repeated_route(function["name"], result, new_routes)
                 tool_messages.append({"role": "tool", "tool_call_id": call.get("id"),
                                       "content": result})
 

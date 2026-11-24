@@ -13,7 +13,7 @@ import json
 import chat_tools
 from chat_tools import (
     plan_trip, get_bus_details, get_metro_taxi_option, places_near_station,
-    plan_route, park_and_ride, run_tool, compact_route, TOOLS, TOOL_FUNCTIONS,
+    plan_route, park_and_ride, get_walk_distance, run_tool, compact_route, TOOLS, TOOL_FUNCTIONS,
 )
 from landmarks import get_landmark_info
 
@@ -37,7 +37,7 @@ def test_very_short_walk_has_no_taxi_distance_and_no_offer():
     r = plan_trip("Katara", "Mall of Qatar")            # 300 m: nobody takes a taxi
     assert r["last_stretch"]["advice"] == "walk"
     assert "road_m" not in r["last_stretch"]
-    assert "offer" not in r
+    assert r["offer"] is None
 
 
 def test_walkable_place_with_a_bus_still_offers_it():
@@ -67,7 +67,7 @@ def test_bus_from_a_different_station_is_offered_without_naming_it():
 def test_far_place_without_a_bus_has_no_offer():
     r = plan_trip("Katara", "Asmakh Mall")
     assert r["last_stretch"]["advice"] == "taxi"
-    assert "offer" not in r
+    assert r["offer"] is None                            # an explicit null: make no offer at all
 
 
 def test_tram_place_always_has_the_notice_and_a_taxi_offer():
@@ -109,6 +109,31 @@ def test_exactly_one_offer_per_reply():
         assert isinstance(offer, dict) and set(offer) == {"type", "question"}
 
 
+# ---------- long walks are left out of the first reply ----------
+
+def test_a_walk_over_1500_m_is_not_mentioned_but_the_taxi_is():
+    r = plan_trip("Katara", "Doha Festival City")        # 7700 m on foot
+    assert "walk_m" not in r["last_stretch"]
+    assert r["last_stretch"]["advice"] == "taxi" and r["last_stretch"]["road_m"] == 8100
+    assert "walk_m" not in plan_trip("Katara", "QU Arts and Science")["last_stretch"]   # 2500 m
+
+
+def test_a_walk_up_to_1500_m_is_still_mentioned():
+    assert plan_trip("Katara", "Asmakh Mall")["last_stretch"]["walk_m"] == 1300
+    assert plan_trip("Katara", "QU Engineering")["last_stretch"]["walk_m"] == 1300
+    assert plan_trip("Katara", "Hyatt Plaza")["last_stretch"]["walk_m"] == 1000
+
+
+def test_get_walk_distance_gives_the_hidden_number_when_asked():
+    r = get_walk_distance("Doha Festival City")
+    assert r["walk_m"] == 7700 and r["road_m"] == 8100 and r["from_station"] == "Lusail QNB"
+    assert "road_m" not in get_walk_distance("Mall of Qatar")        # 300 m: no taxi distance exists
+    assert get_walk_distance("mall")["error"] == "ambiguous_place"
+    assert get_walk_distance("Narnia")["error"] == "place_not_found"
+    assert get_walk_distance("QU")["error"] == "needs_building"
+    assert get_walk_distance("QU Engineering")["walk_m"] == 1300
+
+
 # ---------- hidden details ----------
 
 def test_plan_trip_hides_bus_and_metro_taxi_details():
@@ -129,6 +154,8 @@ def test_bus_details_from_a_different_station():
     assert bus["same_station_as_closest"] is False
     assert bus["get_off_at_stop"]
     assert bus["route_to_boarding_station"]["steps"]     # its own route to the boarding station
+    assert bus["walk_to_place_after_getting_off_m"] == 200      # the walk AFTER getting off, not before boarding
+    assert "stop_to_place_m" not in bus
     assert "tap_in_note" in r
     assert "no bus timing" in r["timing"].lower()
 
@@ -171,7 +198,7 @@ def test_qu_campus_asks_for_a_building_and_lists_them():
 def test_qu_building_gets_taxi_facts_and_no_offer():
     r = plan_trip("Katara", "QU Engineering")
     assert r["last_stretch"]["advice"] == "taxi" and "road_m" in r["last_stretch"]
-    assert "offer" not in r and "needs_building" not in r
+    assert r["offer"] is None and "needs_building" not in r
 
 
 def test_qu_shuttle_link_appears_for_qu_places_only():

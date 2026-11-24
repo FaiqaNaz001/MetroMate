@@ -9,6 +9,7 @@ another, so the finder prefers fewer changes.
 """
 
 import csv
+import functools
 import heapq
 import itertools
 import sys
@@ -242,16 +243,63 @@ def describe_route(summary):
 # PART 4: LOOKING UP A STATION BY NAME (used by the command line for now)
 # ---------------------------------------------------------------------------
 
-def find_station(text, stations):
+# Words people add that are not part of a station's name ("Al Sadd metro", "Katara station").
+STATION_WORDS = {"station", "metro", "tram", "stop"}
+
+
+def station_key(text):
     """
-    Match what a person typed to a station_id, ignoring capital letters.
-    Tries an exact match first, then 'contains'. If a metro and a tram station
-    share a name (Legtaifiya, Lusail QNB), the metro station takes precedence.
+    Simplifies a station name for matching: lower case, punctuation (like the dash in
+    "Al-Sadd") becomes a space, and words like "metro" and "station" are ignored.
     """
-    text = text.strip().lower()
-    matches = [sid for sid, name in stations.items() if name.lower() == text]
+    cleaned = "".join(ch if ch.isalnum() else " " for ch in text.lower())
+    return " ".join(word for word in cleaned.split() if word not in STATION_WORDS)
+
+
+@functools.lru_cache(maxsize=1)
+def load_station_aliases():
+    """
+    Returns a dictionary that maps station_id -> list of other names people use, taken from the
+    optional "aliases" column of stations.csv (names separated by semicolons, for example
+    "Wakrah; Al Wakrah"). Without that column the dictionary is simply empty.
+    """
+    aliases = {}
+    for row in read_csv("stations.csv"):
+        names = [name.strip() for name in (row.get("aliases") or "").split(";") if name.strip()]
+        if names:
+            aliases[row["station_id"]] = names
+    return aliases
+
+
+def find_station(text, stations, aliases=None):
+    """
+    Match what a person typed to a station_id. It ignores capital letters, dashes and extra
+    words, so "AL-Sadd metro", "al sadd" and "Alsadd" all find Al Sadd, and it also knows the
+    alternative names from the aliases column ("Wakrah", "MOQ"). It tries an exact match first,
+    then the same letters without spaces, then 'contains'. If a metro and a tram station share
+    a name (Legtaifiya, Lusail QNB), the metro station takes precedence.
+    """
+    key = station_key(text)
+    if not key:
+        return None
+    if aliases is None:
+        aliases = load_station_aliases()
+
+    # Every simplified name a station can be called: its real name plus its aliases.
+    keys = {}
+    for sid, name in stations.items():
+        names = [station_key(n) for n in [name] + aliases.get(sid, [])]
+        keys[sid] = [n for n in names if n]
+
+    def matching(test):
+        return [sid for sid, names in keys.items() if any(test(name) for name in names)]
+
+    matches = matching(lambda name: name == key)
     if not matches:
-        matches = [sid for sid, name in stations.items() if text in name.lower()]
+        squashed = key.replace(" ", "")
+        matches = matching(lambda name: name.replace(" ", "") == squashed)
+    if not matches and len(key) >= 3:      # too-short text like "al" would match far too much
+        matches = matching(lambda name: key in name)
     matches.sort(key=lambda sid: (not sid.startswith("M_"), sid))
     return matches[0] if matches else None
 
